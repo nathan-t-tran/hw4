@@ -546,9 +546,9 @@ void BinarySearchTree<Key, Value>::remove(const Key& key)
             }
         }
         delete nodeToRemove;
+    }
 
     // Case 2: One child
-    } 
     else if (nodeToRemove->getLeft() == nullptr || nodeToRemove->getRight() == nullptr) 
     {
         Node<Key, Value>* child = (nodeToRemove->getLeft() != nullptr) ? nodeToRemove->getLeft() : nodeToRemove->getRight();
@@ -570,21 +570,16 @@ void BinarySearchTree<Key, Value>::remove(const Key& key)
         }
         child->setParent(nodeToRemove->getParent());
         delete nodeToRemove;
+    }
 
-        // Case 3: Two children
-        else 
-        {
-            Node<Key, Value>* predecessorNode = predecessor(nodeToRemove);
-
-            // Swap node with its predecessor
-            nodeSwap(nodeToRemove, predecessorNode);
-
-            // Now predecessorNode holds the original key
-            remove(predecessorNode->getKey());
-        }
+    // Case 3: Two children
+    else 
+    {
+        Node<Key, Value>* predecessorNode = predecessor(nodeToRemove);
+        nodeSwap(nodeToRemove, predecessorNode);
+        remove(predecessorNode->getKey());
     }
 }
-
 
 
 template<class Key, class Value>
