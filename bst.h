@@ -267,6 +267,7 @@ template<class Key, class Value>
 BinarySearchTree<Key, Value>::iterator::iterator(Node<Key,Value> *ptr)
 {
     // TODO
+    current_ = ptr;
 }
 
 /**
@@ -276,7 +277,7 @@ template<class Key, class Value>
 BinarySearchTree<Key, Value>::iterator::iterator() 
 {
     // TODO
-
+    current_ = nullptr;
 }
 
 /**
@@ -309,6 +310,7 @@ BinarySearchTree<Key, Value>::iterator::operator==(
     const BinarySearchTree<Key, Value>::iterator& rhs) const
 {
     // TODO
+    return this->current_ == rhs.current_;
 }
 
 /**
@@ -321,6 +323,7 @@ BinarySearchTree<Key, Value>::iterator::operator!=(
     const BinarySearchTree<Key, Value>::iterator& rhs) const
 {
     // TODO
+    return this->current_ != rhs.current_;
 
 }
 
@@ -332,9 +335,28 @@ template<class Key, class Value>
 typename BinarySearchTree<Key, Value>::iterator&
 BinarySearchTree<Key, Value>::iterator::operator++()
 {
-    // TODO
+    if (current_ == nullptr) return *this;
 
+    // Case 1: Right subtree exists
+    if (current_->getRight() != nullptr) {
+        current_ = current_->getRight();
+        while (current_->getLeft() != nullptr) {
+            current_ = current_->getLeft();
+        }
+    }
+    // Case 2: No right subtree — go up until we come from left
+    else {
+        Node<Key, Value>* parent = current_->getParent();
+        while (parent != nullptr && current_ == parent->getRight()) {
+            current_ = parent;
+            parent = parent->getParent();
+        }
+        current_ = parent;  // Could be nullptr
+    }
+
+    return *this;
 }
+
 
 
 /*
@@ -356,13 +378,14 @@ template<class Key, class Value>
 BinarySearchTree<Key, Value>::BinarySearchTree() 
 {
     // TODO
+    root_ = nullptr;
 }
 
 template<typename Key, typename Value>
 BinarySearchTree<Key, Value>::~BinarySearchTree()
 {
     // TODO
-
+    clear();
 }
 
 /**
@@ -558,10 +581,29 @@ void BinarySearchTree<Key, Value>::remove(const Key& key)
 
 
 template<class Key, class Value>
-Node<Key, Value>*
-BinarySearchTree<Key, Value>::predecessor(Node<Key, Value>* current)
+Node<Key, Value>* BinarySearchTree<Key, Value>::predecessor(Node<Key, Value>* current)
 {
-    // TODO
+    if (current == nullptr) return nullptr;
+
+    // Case 1: If left child exists, go to rightmost node in left subtree
+    if (current->getLeft() != nullptr) 
+    {
+        current = current->getLeft();
+        while (current->getRight() != nullptr) 
+        {
+            current = current->getRight();
+        }
+        return current;
+    }
+
+    // Case 2: Go up until we find a node which is a right child
+    Node<Key, Value>* parent = current->getParent();
+    while (parent != nullptr && current == parent->getLeft()) 
+    {
+        current = parent;
+        parent = parent->getParent();
+    }
+    return parent;
 }
 
 
@@ -590,10 +632,18 @@ void BinarySearchTree<Key, Value>::clear()
 * A helper function to find the smallest node in the tree.
 */
 template<typename Key, typename Value>
-Node<Key, Value>*
-BinarySearchTree<Key, Value>::getSmallestNode() const
+Node<Key, Value>* BinarySearchTree<Key, Value>::getSmallestNode() const
 {
-    // TODO
+    Node<Key, Value>* current = root_;
+
+    if (current == nullptr) return nullptr;
+
+    while (current->getLeft() != nullptr) 
+    {
+        current = current->getLeft();
+    }
+
+    return current;
 }
 
 /**
