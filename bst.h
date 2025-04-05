@@ -5,6 +5,7 @@
 #include <exception>
 #include <cstdlib>
 #include <utility>
+#include <functional>
 
 /**
  * A templated class for a Node in a search tree.
@@ -508,6 +509,7 @@ void BinarySearchTree<Key, Value>::insert(const std::pair<const Key, Value> &key
         {
             parent->setRight(newNode);
         }
+        newNode->setParent(parent);
     }
 }
 
@@ -572,9 +574,11 @@ void BinarySearchTree<Key, Value>::remove(const Key& key)
     else 
     {
         Node<Key, Value>* predecessorNode = predecessor(nodeToRemove);
+
         // Swap values of node to remove and predecessor
         nodeSwap(nodeToRemove, predecessorNode);
-        remove(key);  // Recursively call remove to delete predecessor node
+        
+        remove(predecessorNode->getKey()); 
     }
 }
 
