@@ -577,7 +577,7 @@ void BinarySearchTree<Key, Value>::remove(const Key& key)
     {
         Node<Key, Value>* predecessorNode = predecessor(nodeToRemove);
         nodeSwap(nodeToRemove, predecessorNode);
-        remove(predecessorNode->getKey());
+        remove(nodeToRemove->getKey());
     }
 }
 
