@@ -37,6 +37,9 @@ public:
 
 protected:
     int8_t balance_;    // effectively a signed char
+    
+    
+
 };
 
 /*
@@ -137,7 +140,10 @@ protected:
     virtual void nodeSwap( AVLNode<Key,Value>* n1, AVLNode<Key,Value>* n2);
 
     // Add helper functions here
-
+    //helper functions
+    void insertFix(AVLNode<Key, Value>* parent, AVLNode<Key, Value>* child);
+    void rotateLeft(AVLNode<Key, Value>* node);
+    void rotateRight(AVLNode<Key, Value>* node);
 
 };
 
@@ -146,10 +152,49 @@ protected:
  * overwrite the current value with the updated value.
  */
 template<class Key, class Value>
-void AVLTree<Key, Value>::insert (const std::pair<const Key, Value> &new_item)
+void AVLTree<Key, Value>::insert(const std::pair<const Key, Value> &new_item)
 {
-    // TODO
+    // If the tree is empty
+    if(this->root_ == nullptr) {
+        this->root_ = new AVLNode<Key, Value>(new_item.first, new_item.second, nullptr);
+        return;
+    }
+
+    AVLNode<Key, Value>* curr = static_cast<AVLNode<Key, Value>*>(this->root_);
+    AVLNode<Key, Value>* parent = nullptr;
+
+    // Traverse to insert like in a normal BST
+    while(curr != nullptr) {
+        if(new_item.first == curr->getKey()) {
+            curr->setValue(new_item.second);
+            return;
+        }
+        parent = curr;
+        if(new_item.first < curr->getKey()) {
+            curr = curr->getLeft();
+        } else {
+            curr = curr->getRight();
+        }
+    }
+
+    // Create the new node
+    AVLNode<Key, Value>* newNode = new AVLNode<Key, Value>(new_item.first, new_item.second, parent);
+    if(new_item.first < parent->getKey()) {
+        parent->setLeft(newNode);
+    } else {
+        parent->setRight(newNode);
+    }
+
+    // Start rebalancing
+    if(parent->getLeft() == newNode) {
+        parent->updateBalance(-1);
+    } else {
+        parent->updateBalance(1);
+    }
+
+    insertFix(parent, newNode);
 }
+
 
 /*
  * Recall: The writeup specifies that if a node has 2 children you
@@ -160,6 +205,109 @@ void AVLTree<Key, Value>:: remove(const Key& key)
 {
     // TODO
 }
+
+template<class Key, class Value>
+void AVLTree<Key, Value>::insertFix(AVLNode<Key, Value>* parent, AVLNode<Key, Value>* child)
+{
+    if(parent == nullptr || parent->getParent() == nullptr) return;
+
+    AVLNode<Key, Value>* grandparent = parent->getParent();
+
+    if(parent == grandparent->getLeft()) {
+        grandparent->updateBalance(-1);
+        if(grandparent->getBalance() == 0) return;
+        else if(grandparent->getBalance() == -1)
+            insertFix(grandparent, parent);
+        else if(grandparent->getBalance() == -2) {
+            if(child == parent->getLeft()) {
+                rotateRight(grandparent);
+                parent->setBalance(0);
+                grandparent->setBalance(0);
+            } else {
+                rotateLeft(parent);
+                rotateRight(grandparent);
+                int8_t childBalance = child->getBalance();
+                if(childBalance == -1) {
+                    parent->setBalance(0);
+                    grandparent->setBalance(1);
+                } else if(childBalance == 0) {
+                    parent->setBalance(0);
+                    grandparent->setBalance(0);
+                } else {
+                    parent->setBalance(-1);
+                    grandparent->setBalance(0);
+                }
+                child->setBalance(0);
+            }
+        }
+    } else {
+        grandparent->updateBalance(1);
+        if(grandparent->getBalance() == 0) return;
+        else if(grandparent->getBalance() == 1)
+            insertFix(grandparent, parent);
+        else if(grandparent->getBalance() == 2) {
+            if(child == parent->getRight()) {
+                rotateLeft(grandparent);
+                parent->setBalance(0);
+                grandparent->setBalance(0);
+            } else {
+                rotateRight(parent);
+                rotateLeft(grandparent);
+                int8_t childBalance = child->getBalance();
+                if(childBalance == 1) {
+                    parent->setBalance(0);
+                    grandparent->setBalance(-1);
+                } else if(childBalance == 0) {
+                    parent->setBalance(0);
+                    grandparent->setBalance(0);
+                } else {
+                    parent->setBalance(1);
+                    grandparent->setBalance(0);
+                }
+                child->setBalance(0);
+            }
+        }
+    }
+}
+
+template<class Key, class Value>
+void AVLTree<Key, Value>::rotateLeft(AVLNode<Key, Value>* x)
+{
+    AVLNode<Key, Value>* y = x->getRight();
+    x->setRight(y->getLeft());
+    if(y->getLeft() != nullptr) y->getLeft()->setParent(x);
+    y->setParent(x->getParent());
+
+    if(x->getParent() == nullptr)
+        this->root_ = y;
+    else if(x == x->getParent()->getLeft())
+        x->getParent()->setLeft(y);
+    else
+        x->getParent()->setRight(y);
+
+    y->setLeft(x);
+    x->setParent(y);
+}
+
+template<class Key, class Value>
+void AVLTree<Key, Value>::rotateRight(AVLNode<Key, Value>* x)
+{
+    AVLNode<Key, Value>* y = x->getLeft();
+    x->setLeft(y->getRight());
+    if(y->getRight() != nullptr) y->getRight()->setParent(x);
+    y->setParent(x->getParent());
+
+    if(x->getParent() == nullptr)
+        this->root_ = y;
+    else if(x == x->getParent()->getLeft())
+        x->getParent()->setLeft(y);
+    else
+        x->getParent()->setRight(y);
+
+    y->setRight(x);
+    x->setParent(y);
+}
+
 
 template<class Key, class Value>
 void AVLTree<Key, Value>::nodeSwap( AVLNode<Key,Value>* n1, AVLNode<Key,Value>* n2)
